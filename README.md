@@ -78,8 +78,8 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento:
     
     ```properties
     spring.datasource.url=jdbc:postgresql://localhost:5433/db_popbank
-    spring.datasource.username=postgres
-    spring.datasource.password=vitor
+    spring.datasource.username=seu_usuario
+    spring.datasource.password=sua_senha
     
     # IMPORTANTE: Para a primeira execução, altere para 'update' para criar as tabelas automaticamente
     spring.jpa.hibernate.ddl-auto=update
