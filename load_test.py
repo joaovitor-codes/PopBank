@@ -4,8 +4,17 @@ import time
 import string
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 BASE_URL = "http://localhost:8080/api"
+
+# Configure Global Session with Connection Pooling
+session = requests.Session()
+retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+adapter = HTTPAdapter(pool_connections=100, pool_maxsize=100, max_retries=retries)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
 
 def generate_cpf():
     def calculate_digit(digits):
@@ -78,7 +87,8 @@ def transfer(sender_token, sender_id, receiver_id, amount):
         "transactionType": "TRANSFER"
     }
     start = time.time()
-    response = requests.post(f"{BASE_URL}/transactions", json=payload, headers=headers)
+    # Use session instead of requests direct call
+    response = session.post(f"{BASE_URL}/transactions", json=payload, headers=headers)
     end = time.time()
     return response.status_code, (end - start)
 
@@ -115,8 +125,8 @@ def run_test():
     deposit(id_a, 1000000)
 
     # 3. Load Test
-    NUM_REQUESTS = 100
-    CONCURRENCY = 10
+    NUM_REQUESTS = 100000
+    CONCURRENCY = 100
     
     print(f"Starting {NUM_REQUESTS} transactions with {CONCURRENCY} threads...")
     

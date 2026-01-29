@@ -1,7 +1,6 @@
 package com.dev.popbank.service;
 
 import com.dev.popbank.model.dto.conta.*;
-import com.dev.popbank.model.dto.user.UserRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;

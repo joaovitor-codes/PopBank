@@ -2,12 +2,10 @@ package com.dev.popbank.controller;
 
 import com.dev.popbank.config.security.TokenService;
 import com.dev.popbank.model.auth.ContaEntity;
-import com.dev.popbank.model.auth.ContasRole;
 import com.dev.popbank.model.dto.conta.AuthenticationDto;
 import com.dev.popbank.model.dto.conta.CreateContaDto;
 import com.dev.popbank.model.dto.conta.LoginDto;
 import com.dev.popbank.model.dto.conta.RegisterAdmDto;
-import com.dev.popbank.model.dto.conta.RegisterDto;
 import com.dev.popbank.repository.ContaRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -42,8 +40,6 @@ public class AutheticationController {
         ContaEntity conta = (ContaEntity) auth.getPrincipal();
         var token = tokenService.generateToken(conta);
         
-        // Retorna o ID do USUÁRIO (perfil) e não da Conta, pois transações usam ID do usuário
-        // Se conta.getUsuario() for nulo (caso de admin criado sem user), usa o ID da conta ou lança erro
         var userId = conta.getUsuario() != null ? conta.getUsuario().getId() : conta.getId();
 
         return ResponseEntity.ok(new LoginDto(token, userId));
