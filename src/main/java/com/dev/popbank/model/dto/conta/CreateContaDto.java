@@ -20,7 +20,6 @@ public record CreateContaDto(
         @NotBlank
         @CPF
         String cpf,
-        @NotBlank
         @Past
         Date dataNascimento,
         @NotBlank

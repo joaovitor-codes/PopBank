@@ -38,10 +38,15 @@ public class AutheticationController {
     public ResponseEntity<LoginDto> login(@RequestBody @Valid AuthenticationDto data){
         var userNamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = this.authenticationManager.authenticate(userNamePassword);
+        
+        ContaEntity conta = (ContaEntity) auth.getPrincipal();
+        var token = tokenService.generateToken(conta);
+        
+        // Retorna o ID do USUÁRIO (perfil) e não da Conta, pois transações usam ID do usuário
+        // Se conta.getUsuario() for nulo (caso de admin criado sem user), usa o ID da conta ou lança erro
+        var userId = conta.getUsuario() != null ? conta.getUsuario().getId() : conta.getId();
 
-        var token = tokenService.generateToken((ContaEntity) auth.getPrincipal());
-
-        return ResponseEntity.ok(new LoginDto(token));
+        return ResponseEntity.ok(new LoginDto(token, userId));
     }
 
     @PostMapping("/register")

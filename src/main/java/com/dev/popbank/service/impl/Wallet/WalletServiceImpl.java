@@ -39,42 +39,52 @@ public class WalletServiceImpl implements WalletService {
     @Override
     @Transactional
     public void deleteWallet(UUID userId) {
-        WalletEntity walletEntity = walletRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+        WalletEntity walletEntity = walletRepository.findByUserId(userId);
+        if (walletEntity == null) {
+            throw new RuntimeException("Carteira não encontrada");
+        }
         walletRepository.delete(walletEntity);
     }
 
     @Override
     @Transactional
     public BigDecimal getBalance(UUID userId) {
-        WalletEntity walletEntity = walletRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+        WalletEntity walletEntity = walletRepository.findByUserId(userId);
+        if (walletEntity == null) {
+            throw new RuntimeException("Carteira não encontrada");
+        }
         return walletEntity.getBalance();
     }
 
     @Override
     @Transactional
     public void addBalance(UUID userId, BigDecimal amount) {
-        WalletEntity walletEntity = walletRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
-        walletEntity.setBalance(getBalance(userId).add(amount));
+        WalletEntity walletEntity = walletRepository.findByUserId(userId);
+        if (walletEntity == null) {
+            throw new RuntimeException("Carteira não encontrada");
+        }
+        walletEntity.setBalance(walletEntity.getBalance().add(amount));
         walletRepository.save(walletEntity);
     }
 
     @Override
     @Transactional
     public void withdrawBalance(UUID userId, BigDecimal amount) {
-        WalletEntity walletEntity = walletRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
-        walletEntity.setBalance(getBalance(userId).subtract(amount));
+        WalletEntity walletEntity = walletRepository.findByUserId(userId);
+        if (walletEntity == null) {
+            throw new RuntimeException("Carteira não encontrada");
+        }
+        walletEntity.setBalance(walletEntity.getBalance().subtract(amount));
         walletRepository.save(walletEntity);
     }
 
     @Override
     @Transactional
     public List<SavingsEntity> getSavingsAccounts(UUID userId) {
-        WalletEntity walletEntity = walletRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+        WalletEntity walletEntity = walletRepository.findByUserId(userId);
+        if (walletEntity == null) {
+            throw new RuntimeException("Carteira não encontrada");
+        }
         return walletEntity.getSavingsAccounts();
     }
 

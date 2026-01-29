@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
+@Table(name = "tb_wallets")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

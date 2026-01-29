@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
+@Table(name = "tb_users")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

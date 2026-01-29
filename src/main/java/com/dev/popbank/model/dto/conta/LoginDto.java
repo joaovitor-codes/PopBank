@@ -1,4 +1,6 @@
 package com.dev.popbank.model.dto.conta;
 
-public record LoginDto(String token) {
+import java.util.UUID;
+
+public record LoginDto(String token, UUID userId) {
 }
