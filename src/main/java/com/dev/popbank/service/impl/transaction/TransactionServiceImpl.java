@@ -43,6 +43,7 @@ public class TransactionServiceImpl implements TransactionService {
         var receiver = userRepository.findById(transactionRequest.receiverId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
+
         if (sender.getId().equals(receiver.getId())) {
             throw new RuntimeException("Não é possível transferir para si mesmo");
         }

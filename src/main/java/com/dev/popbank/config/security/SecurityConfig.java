@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
     private final SecurityFilter securityFilter;
 
     public SecurityConfig(SecurityFilter securityFilter) {
@@ -28,14 +29,28 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/contas/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/wallets/**").permitAll()
+                        // Rota PÚBLICA 
+                        // Apenas login e criar conta comum
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/wallets/ping").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/transactions").hasRole("ADMIN")
+
+                        // Rota de ADMINISTRAÇÃO 
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register-admin").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/contas/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/wallets/{id}/deposit").hasRole("ADMIN")
+
+                        // TRANSAÇÕES
+                        .requestMatchers(HttpMethod.GET, "/api/transactions").hasRole("ADMIN") 
                         .requestMatchers(HttpMethod.DELETE, "/api/transactions/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/transactions/*/undo").hasRole("ADMIN")
+                        
+                        // USUÁRIO LOGADO
+                        .requestMatchers(HttpMethod.POST, "/api/transactions").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/{id}").authenticated()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

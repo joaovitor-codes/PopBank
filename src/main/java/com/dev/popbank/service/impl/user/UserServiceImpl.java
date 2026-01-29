@@ -3,7 +3,7 @@ package com.dev.popbank.service.impl.user;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
@@ -23,11 +23,13 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final WalletService walletService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, WalletService walletService) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, WalletService walletService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.walletService = walletService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(userEntity);
 
         userEntity.setWallet(walletService.createWallet(userEntity.getId()));
-        userEntity.setSenha(new BCryptPasswordEncoder().encode(userRequest.senha()));
+        userEntity.setSenha(passwordEncoder.encode(userRequest.senha()));
 
         return userEntity;
     }
@@ -100,7 +102,7 @@ public class UserServiceImpl implements UserService {
         userEntity.setCpf(userPut.cpf());
         userEntity.setDataNascimento(userPut.dataNascimento());
 
-        String encodedPassword = new BCryptPasswordEncoder().encode(userPut.cpf());
+        String encodedPassword = passwordEncoder.encode(userPut.cpf());
         userEntity.setSenha(encodedPassword);
         userRepository.save(userEntity);
     }
@@ -119,7 +121,7 @@ public class UserServiceImpl implements UserService {
         }
         if (userPatch.cpf().isPresent()) {
             userEntity.setCpf(userPatch.cpf().get());
-            String encodedPassword = new BCryptPasswordEncoder().encode(userPatch.cpf().get());
+            String encodedPassword = passwordEncoder.encode(userPatch.cpf().get());
             userEntity.setSenha(encodedPassword);
         }
         if (userPatch.dataNascimento().isPresent()) {

@@ -11,7 +11,6 @@ import com.dev.popbank.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +36,10 @@ public class ContaServiceImpl implements ContaService {
     @Override
     @Transactional(readOnly = true)
     public ContaResponse getContaById(UUID id) {
+        if (id == null){
+            throw new IllegalArgumentException("ID da conta não pode ser nulo");
+        }
+
         var contaEntity = contaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
 
@@ -89,6 +92,10 @@ public class ContaServiceImpl implements ContaService {
     @Override
     @Transactional
     public void deleteContaById(UUID id){
+        if (id == null){
+            throw new IllegalArgumentException("ID da conta não pode ser nulo");
+        }
+
         if (contaRepository.existsById(id)){
             contaRepository.deleteById(id);
         } else {
@@ -99,10 +106,14 @@ public class ContaServiceImpl implements ContaService {
     @Override
     @Transactional
     public void contaPut(ContaPutDto contaPutDto, UUID id) {
+        if (id == null){
+            throw new IllegalArgumentException("ID da conta não pode ser nulo");
+        }
+
         var contaEntity = contaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
 
-        String encodedPassword = new BCryptPasswordEncoder().encode(contaPutDto.senha());
+        String encodedPassword = passwordEncoder.encode(contaPutDto.senha());
         contaEntity.setLogin(contaPutDto.login());
         contaEntity.setSenha(encodedPassword);
         contaRepository.save(contaEntity);
@@ -111,15 +122,23 @@ public class ContaServiceImpl implements ContaService {
     @Override
     @Transactional
     public void contaPatch(ContaPatchDto contaPatchDto, UUID id) {
+        if (id == null){
+            throw new IllegalArgumentException("ID da conta não pode ser nulo");
+        }
+
         var contaEntity = contaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        if(contaEntity.getUsuario() == null){
+            throw new RuntimeException("Usuário não encontrado");
+        }
 
         if (contaPatchDto.login().isPresent()){
             contaEntity.setLogin(contaPatchDto.login().get());
         }
 
         if (contaPatchDto.senha().isPresent()){
-            String encodedPassword = new BCryptPasswordEncoder().encode(contaPatchDto.senha().get());
+            String encodedPassword = passwordEncoder.encode(contaPatchDto.senha().get());
             contaEntity.setSenha(encodedPassword);
         }
 
