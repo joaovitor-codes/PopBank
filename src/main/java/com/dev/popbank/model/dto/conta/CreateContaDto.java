@@ -1,5 +1,6 @@
 package com.dev.popbank.model.dto.conta;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
@@ -21,6 +22,7 @@ public record CreateContaDto(
         @CPF
         String cpf,
         @Past
+        @JsonFormat(pattern = "dd/MM/yyyy")
         Date dataNascimento,
         @NotBlank
         String senhaTransacao
