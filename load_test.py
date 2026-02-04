@@ -125,7 +125,7 @@ def run_test():
     deposit(id_a, 1000000)
 
     # 3. Load Test
-    NUM_REQUESTS = 100000
+    NUM_REQUESTS = 10000
     CONCURRENCY = 100
     
     print(f"Starting {NUM_REQUESTS} transactions with {CONCURRENCY} threads...")

@@ -36,6 +36,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/wallets/ping").permitAll()
                         .requestMatchers("/error").permitAll()
 
+                        // SWAGGER DOCUMENTATION
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                         // Rota de ADMINISTRAÇÃO 
                         .requestMatchers(HttpMethod.POST, "/api/auth/register-admin").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
