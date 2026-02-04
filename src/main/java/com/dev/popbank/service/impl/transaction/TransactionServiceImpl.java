@@ -1,7 +1,6 @@
 package com.dev.popbank.service.impl.transaction;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +8,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 
+import com.dev.popbank.exception.InsufficientBalanceException;
+import com.dev.popbank.exception.SelfTransferException;
+import com.dev.popbank.exception.TransactionNotFound;
+import com.dev.popbank.exception.UserNotFoundException;
 import com.dev.popbank.mapper.TransactionMapper;
 import com.dev.popbank.model.dto.transaction.TransactionRequest;
 import com.dev.popbank.model.dto.transaction.TransactionResponse;
@@ -38,20 +41,20 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest transactionRequest) {
         var sender = userRepository.findById(transactionRequest.senderId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         var receiver = userRepository.findById(transactionRequest.receiverId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
 
         if (sender.getId().equals(receiver.getId())) {
-            throw new RuntimeException("Não é possível transferir para si mesmo");
+            throw new SelfTransferException("Não é possível transferir para si mesmo");
         }
 
         BigDecimal balance = walletService.getBalance(sender.getId());
         
         if (balance.compareTo(transactionRequest.amount()) < 0) {
-            throw new RuntimeException("Saldo insuficiente");
+            throw new InsufficientBalanceException("Saldo insuficiente");
         }
 
         walletService.addBalance(sender.getId(), transactionRequest.amount().negate());
@@ -69,10 +72,10 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     public boolean validateTransaction(TransactionRequest transactionRequest) {
         var sender = userRepository.findById(transactionRequest.senderId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         var receiver = userRepository.findById(transactionRequest.receiverId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         if (sender.getId().equals(receiver.getId())) {
             return false;
@@ -104,7 +107,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         var transactionEntity = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                .orElseThrow(() -> new TransactionNotFound("Transação não encontrada"));
         return transactionMapper.toTransactionResponse(transactionEntity);
     }
 
@@ -124,7 +127,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         var transactionEntity = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                .orElseThrow(() -> new TransactionNotFound("Transação não encontrada"));
+
         transactionRepository.delete(transactionEntity);
     }
 
@@ -136,7 +140,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         var transactionEntity = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+                .orElseThrow(() -> new TransactionNotFound("Transação não encontrada"));
 
         walletService.addBalance(transactionEntity.getSender().getId(), transactionEntity.getAmount());
         walletService.withdrawBalance(transactionEntity.getReceiver().getId(), transactionEntity.getAmount());

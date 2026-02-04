@@ -1,5 +1,8 @@
 package com.dev.popbank.service.impl.conta;
 
+import com.dev.popbank.exception.AccountNotFoundException;
+import com.dev.popbank.exception.EmailAlreadyExistsException;
+import com.dev.popbank.exception.UserNotFoundException;
 import com.dev.popbank.mapper.ContaMapper;
 import com.dev.popbank.model.auth.ContaEntity;
 import com.dev.popbank.model.dto.conta.*;
@@ -41,7 +44,7 @@ public class ContaServiceImpl implements ContaService {
         }
 
         var contaEntity = contaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
 
         return contaMapper.toContaResponse(contaEntity);
     }
@@ -71,7 +74,7 @@ public class ContaServiceImpl implements ContaService {
         );
 
         if (contaRepository.existsByLogin(contaRequest.login())){
-            throw new RuntimeException("Email já está em uso");
+            throw new EmailAlreadyExistsException("Email já está em uso");
         }
 
         var user = userService.createUser(userRequest);
@@ -99,7 +102,7 @@ public class ContaServiceImpl implements ContaService {
         if (contaRepository.existsById(id)){
             contaRepository.deleteById(id);
         } else {
-            throw new RuntimeException("Conta não encontrada");
+            throw new AccountNotFoundException("Conta não encontrada");
         }
     }
 
@@ -111,7 +114,7 @@ public class ContaServiceImpl implements ContaService {
         }
 
         var contaEntity = contaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
 
         String encodedPassword = passwordEncoder.encode(contaPutDto.senha());
         contaEntity.setLogin(contaPutDto.login());
@@ -127,10 +130,10 @@ public class ContaServiceImpl implements ContaService {
         }
 
         var contaEntity = contaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+                .orElseThrow(() -> new AccountNotFoundException("Conta não encontrada"));
 
         if(contaEntity.getUsuario() == null){
-            throw new RuntimeException("Usuário não encontrado");
+            throw new UserNotFoundException("Usuário não encontrado");
         }
 
         if (contaPatchDto.login().isPresent()){

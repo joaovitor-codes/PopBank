@@ -1,5 +1,8 @@
 package com.dev.popbank.service.impl.Wallet;
 
+import com.dev.popbank.exception.InsufficientBalanceException;
+import com.dev.popbank.exception.UserNotFoundException;
+import com.dev.popbank.exception.WalletNotFoundException;
 import com.dev.popbank.model.wallet.SavingsEntity;
 import com.dev.popbank.model.wallet.WalletEntity;
 import com.dev.popbank.repository.UserRepository;
@@ -26,7 +29,7 @@ public class WalletServiceImpl implements WalletService {
     @Transactional
     public WalletEntity createWallet(UUID userId) {
         var user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         WalletEntity walletEntity = WalletEntity.builder()
                 .user(user)
@@ -41,7 +44,7 @@ public class WalletServiceImpl implements WalletService {
     public void deleteWallet(UUID userId) {
         WalletEntity walletEntity = walletRepository.findByUserId(userId);
         if (walletEntity == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
         walletRepository.delete(walletEntity);
     }
@@ -51,7 +54,7 @@ public class WalletServiceImpl implements WalletService {
     public BigDecimal getBalance(UUID userId) {
         WalletEntity walletEntity = walletRepository.findByUserId(userId);
         if (walletEntity == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
         return walletEntity.getBalance();
     }
@@ -61,7 +64,7 @@ public class WalletServiceImpl implements WalletService {
     public void addBalance(UUID userId, BigDecimal amount) {
         WalletEntity walletEntity = walletRepository.findByUserId(userId);
         if (walletEntity == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
         walletEntity.setBalance(walletEntity.getBalance().add(amount));
         walletRepository.save(walletEntity);
@@ -72,7 +75,7 @@ public class WalletServiceImpl implements WalletService {
     public void withdrawBalance(UUID userId, BigDecimal amount) {
         WalletEntity walletEntity = walletRepository.findByUserId(userId);
         if (walletEntity == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
         walletEntity.setBalance(walletEntity.getBalance().subtract(amount));
         walletRepository.save(walletEntity);
@@ -83,7 +86,7 @@ public class WalletServiceImpl implements WalletService {
     public List<SavingsEntity> getSavingsAccounts(UUID userId) {
         WalletEntity walletEntity = walletRepository.findByUserId(userId);
         if (walletEntity == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
         return walletEntity.getSavingsAccounts();
     }
@@ -94,7 +97,7 @@ public class WalletServiceImpl implements WalletService {
         WalletEntity wallet = walletRepository.findByUserId(userId);
 
         if (wallet == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
 
         wallet.addSavingsAccount(wallet);
@@ -110,7 +113,7 @@ public class WalletServiceImpl implements WalletService {
         }
 
         if (wallet == null || wallet.getSavingsAccounts().isEmpty()) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
 
         wallet.removeSavingsAccount(index, wallet);
@@ -122,7 +125,7 @@ public class WalletServiceImpl implements WalletService {
         WalletEntity wallet = walletRepository.findByUserId(userId);
 
         if (wallet == null) {
-            throw new RuntimeException("Carteira não encontrada");
+            throw new WalletNotFoundException("Carteira não encontrada");
         }
 
         List<SavingsEntity> savingsAccounts = wallet.getSavingsAccounts();
@@ -136,7 +139,7 @@ public class WalletServiceImpl implements WalletService {
         SavingsEntity toAccount = savingsAccounts.get(toIndex);
 
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Saldo insuficiente na conta poupança de origem");
+            throw new InsufficientBalanceException("Saldo insuficiente na conta poupança de origem");
         }
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));

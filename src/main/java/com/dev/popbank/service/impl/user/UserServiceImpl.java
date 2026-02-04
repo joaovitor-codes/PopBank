@@ -1,5 +1,7 @@
 package com.dev.popbank.service.impl.user;
 
+import com.dev.popbank.model.wallet.WalletEntity;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -7,6 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
+
+import com.dev.popbank.exception.CpfAlreadyExistsException;
+import com.dev.popbank.exception.UserNotFoundException;
 import com.dev.popbank.mapper.UserMapper;
 import com.dev.popbank.model.dto.user.UserPatch;
 import com.dev.popbank.model.dto.user.UserPut;
@@ -15,20 +20,17 @@ import com.dev.popbank.model.dto.user.UserResponse;
 import com.dev.popbank.model.user.UserEntity;
 import com.dev.popbank.repository.UserRepository;
 import com.dev.popbank.service.UserService;
-import com.dev.popbank.service.WalletService;
 import org.springframework.data.domain.PageRequest;
 
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final WalletService walletService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, WalletService walletService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        this.walletService = walletService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -36,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deactivateUserById(UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
         userEntity.setAtivo(false);
     }
 
@@ -44,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void activateUserById(UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
         userEntity.setAtivo(true);
     }
 
@@ -52,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public boolean isActivated(UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         return userEntity.isAtivo();
     }
@@ -61,17 +63,20 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserEntity createUser(UserRequest userRequest) {
         if (userRepository.findByCpf(userRequest.cpf()) != null) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new CpfAlreadyExistsException("CPF já cadastrado");
         }
 
         var userEntity = userMapper.toUserEntity(userRequest);
-
-        userRepository.save(userEntity);
-
-        userEntity.setWallet(walletService.createWallet(userEntity.getId()));
         userEntity.setSenha(passwordEncoder.encode(userRequest.senha()));
 
-        return userEntity;
+        WalletEntity walletEntity = WalletEntity.builder()
+                .user(userEntity)
+                .balance(new BigDecimal("0.00"))
+                .build();
+        
+        userEntity.setWallet(walletEntity);
+
+        return userRepository.save(userEntity);
     }
 
     @Override
@@ -82,7 +87,7 @@ public class UserServiceImpl implements UserService {
         }
 
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         if (!userEntity.isAtivo()) {
             throw new RuntimeException("Usuário inativo não pode ser deletado");
@@ -95,7 +100,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void userPut(UserPut userPut, UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         userEntity.setNome(userPut.nome());
         userEntity.setNomeDaMae(userPut.nomeDaMae());
@@ -111,7 +116,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void userPatch(UserPatch userPatch, UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         if (userPatch.nome().isPresent()) {
             userEntity.setNome(userPatch.nome().get());
@@ -135,7 +140,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse getUserById(UUID id) {
         var userEntity = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado"));
 
         return userMapper.toUserResponse(userEntity);
     }

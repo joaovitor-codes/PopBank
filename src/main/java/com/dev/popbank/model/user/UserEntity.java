@@ -3,11 +3,7 @@ package com.dev.popbank.model.user;
 import com.dev.popbank.model.auth.ContaEntity;
 import com.dev.popbank.model.wallet.WalletEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 
 import java.util.Date;
 import java.util.UUID;
@@ -28,8 +24,9 @@ public class UserEntity {
     private String cpf;
     private Date dataNascimento;
     private String senha;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "wallet_id")
+    @ToString.Exclude
     private WalletEntity wallet;
     @OneToOne(mappedBy = "usuario")
     private ContaEntity conta;
