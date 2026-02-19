@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import org.hibernate.validator.constraints.br.CPF;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 public record UserRequest(
@@ -14,6 +16,7 @@ public record UserRequest(
         @CPF
         String cpf,
         @Past
+        @JsonFormat(pattern = "dd/MM/yyyy")
         Date dataNascimento,
         String senha
 ) {
